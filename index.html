@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark light" />
+    <title>AIC video browser</title>
+    <style>
+    * {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
+        Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans',
+        'Helvetica Neue', sans-serif;
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    .container {
+      padding: 1rem;
+      display: flex;
+      flex-wrap: wrap;
+      position: fixed;
+      inset: 0;
+    }
+
+    .controls {
+      width: 100%;
+      max-width: 32rem;
+    }
+
+    .label {
+      padding: .675em 1.5em .675em 0;
+    }
+
+    .input {
+      padding: .675em 1.5em;
+      border: none;
+      border-radius: .25em;
+      cursor: pointer;
+    }
+
+    .bar {
+      display: flex;
+      padding: 1rem;
+
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .bar>[type="text"] {
+      flex-grow: 1;
+    }
+
+    .search-bar {
+      display: flex;
+
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .search-bar>[type="text"] {
+      flex-grow: 1;
+    }
+
+    #submit_form {
+      display: flex;
+      flex-direction: column;
+      padding: 1rem;
+      gap: 1rem;
+    }
+
+    #search_form {
+      display: flex;
+      flex-direction: column;
+      padding: 1rem;
+      gap: 1rem;
+    }
+
+    .fields {
+      display: grid;
+      grid-template-columns: max-content 1fr;
+      gap: 1rem;
+    }
+    
+    .buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    .buttons>input {
+      font-size: 1rem;
+    }
+
+    #result_container {
+      padding: 1rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+      grid-auto-flow: dense;
+      gap: 1.5rem;
+      height: 100%;
+      flex-grow: 1;
+      overflow-y: scroll;
+    }
+
+    .result-item {
+      display: flex;
+      position: relative;
+
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .result-item.hidden {
+      display: none;
+    }
+
+    .result-item.visited {
+      background-color: yellow;
+    }
+
+    .result-thumbnail {
+      width: 100%;
+    }
+
+    .result-stats {
+      display: flex;
+      justify-content: space-between;
+    }
+
+    #submit_log {
+      font-family: monospace;
+      padding: 1rem;
+      overflow-x: auto;
+    }
+    </style>
+
+    <script type="application/json" id="config_json">
+      {{payload}}
+    </script>
+
+    <script type="module"> 
+    const config = JSON.parse(config_json.textContent)
+
+    search_form.addEventListener("submit", async e => {
+      e.preventDefault()
+
+      const data = new FormData(e.target)
+      document.title = "⏳ Loading"
+      const response = await fetch("/search", {
+        method: "POST",
+        body: data.get("query")
+      })
+
+      result_container.innerHTML = await response.text()
+      document.title = "AIC video browser"
+    })
+
+    clear_form.addEventListener("submit", e => {
+      e.preventDefault()
+
+      const data = new FormData(e.target)
+      const video_id = data.get("video")
+      if (video_id == "") {
+        for (const e of document.querySelectorAll(".result-item")) {
+          e.classList.remove("hidden")
+        }
+        return
+      }
+
+      for (const e of document.querySelectorAll(`[data-video-id=${video_id}]`)) {
+        e.classList.toggle("hidden")
+      }
+    })
+
+    login_button.addEventListener("click", async e => {
+      submit_log.textContent = "logging in..."
+
+      const res = (await (await fetch(`${config.api_url}/login`, {
+        method: "POST",
+        body: JSON.stringify({
+          username: config.username,
+          password: config.password
+        })
+      })).json())
+
+      submit_log.innerHTML = JSON.stringify(res, null, 2)
+      session_field.value = res.sessionId
+    })
+
+    submit_form.addEventListener("submit", async e => {
+      e.preventDefault()
+      submit_log.textContent = "submitting..."
+      const data = new FormData(e.target)
+      const video = data.get("video")
+      const frame = data.get("frame")
+      const session = data.get("session")
+      const result = await (await fetch(`${config.api_url}/v1/submit?item=${video}&frame=${frame}&session=${session}`)).json()
+      submit_log.innerHTML = JSON.stringify(result, null, 2)
+    })
+
+    function timecode2frame(timecode) {
+      const min = Number(timecode.split(":")[0])
+      const sec = Number(timecode.split(":")[1])
+
+      const frame = (min*60 + sec)*25
+      return frame
+    }
+
+    frame_input.addEventListener("change", e => {
+      const pattern = /^[0-5]?\d:[0-5]\d$/
+      if (!pattern.test(frame_input.value)) return
+
+      frame_input.value = timecode2frame(frame_input.value)
+    })
+
+    video_input.addEventListener("change", e => {
+      const pattern = /^L\d\d_V\d\d\d:\d+$/
+      if (!pattern.test(video_input.value))
+        return
+
+      const splitted = video_input.value.split(":")
+      video_input.value = splitted[0]
+      frame_input.value = splitted[1]
+    })
+    </script>
+
+    <script>
+    function visit(elem) {
+      elem.parentElement.classList.add("visited");
+    }
+
+    function fill(elem) {
+      video_input.value = elem.getAttribute('data-video-id')
+      clear_input.value = elem.getAttribute('data-video-id')
+      frame_input.value = elem.getAttribute('data-frame-id')
+
+    }
+    </script>
+  </head>
+
+  <body>
+    <div class="container">
+      <section class="controls">
+        <form id="search_form" action="" autocomplete="off">
+          <div class="search-bar">
+            <input class="input" type="text" name="query"
+            placeholder="Enter your query..." />
+            <input class="input" type="submit" value="search" />
+          </div>
+        </form>
+
+        <form id="clear_form" class="bar" action="" autocomplete="off">
+          <input id="clear_input" class="input" type="text" name="video"
+            placeholder="Video id to remove..." />
+          <input class="input" type="submit" value="clear" />
+        </form>
+
+        <form id="submit_form" action="" autocomplete="off">
+          <div class="fields">
+            <span class="label">Video</span>
+            <input id="video_input" class="input" type="text" name="video" placeholder="Enter the video to submit..." />
+            <span class="label">Frame</span>
+            <input id="frame_input" class="input" type="text" name="frame" placeholder="Enter the frame to submit..." />
+          </div>
+
+          <input class="input" type="text" name="session" id="session_field" hidden />
+
+          <div class="buttons">
+            <input class="input" type="button" id="login_button" value="Login">
+            <input class="input" type="submit" value="Submit">
+          </div>
+        </form>
+
+        <pre id="submit_log"></pre>
+      </section>
+
+      <section id="result_container" />
+    </div>
+  </body>
+</html>
