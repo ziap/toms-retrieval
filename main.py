@@ -1,5 +1,6 @@
 import os
 import json
+from string import Template
 
 print("Loading PyTorch...", end=' ', flush=True)
 import numpy as np
@@ -92,9 +93,18 @@ def search_all_queries(queries, k):
     return final_videos, final_frames, final_values
 
 
-with open("index.html", encoding="utf-8") as html_file:
+with open("template.html", encoding="utf-8") as html_file:
+    mapping = {}
+    template = Template(html_file.read())
+
     with open("config.json", encoding="utf-8") as config_file:
-        html = html_file.read().replace("{{payload}}", config_file.read())
+        mapping["config"] = config_file.read()
+    with open("style.css", encoding="utf-8") as css_file:
+        mapping["css"] = css_file.read()
+    with open("script.js", encoding="utf-8") as js_file:
+        mapping["js"] = js_file.read()
+
+    html = template.substitute(mapping)
 
 async def homepage(_: Request):
     return Response(html, media_type="text/html")

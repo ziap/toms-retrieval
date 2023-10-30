@@ -66,7 +66,7 @@ Create a Python virtual environment, we tested with Python 3.11.
 
 Clone the repository
 
-```
+```sh
 git clone https://github.com/ziap/toms-retrieval
 cd toms-retrieval
 ```
@@ -76,7 +76,7 @@ and architecture, we used version 2.0.1.
 
 Install other dependencies
 
-```
+```sh
 pip install ftfy regex tqdm
 pip install git+https://github.com/openai/CLIP.git
 pip install starlette uvicorn
@@ -101,7 +101,7 @@ backends.
 
 Start the server
 
-```bash
+```sh
 python main.py
 ```
 
