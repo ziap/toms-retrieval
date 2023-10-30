@@ -93,16 +93,17 @@ def search_all_queries(queries, k):
     return final_videos, final_frames, final_values
 
 
-with open("template.html", encoding="utf-8") as html_file:
+with open("web/template.html", encoding="utf-8") as html_file:
     mapping = {}
     template = Template(html_file.read())
 
+    with open("web/style.css", encoding="utf-8") as css_file:
+        mapping["css"] = css_file.read()
+    with open("web/script.js", encoding="utf-8") as js_file:
+        mapping["js"] = js_file.read()
+
     with open("config.json", encoding="utf-8") as config_file:
         mapping["config"] = config_file.read()
-    with open("style.css", encoding="utf-8") as css_file:
-        mapping["css"] = css_file.read()
-    with open("script.js", encoding="utf-8") as js_file:
-        mapping["js"] = js_file.read()
 
     html = template.substitute(mapping)
 
