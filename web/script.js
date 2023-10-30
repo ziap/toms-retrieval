@@ -1,4 +1,5 @@
 const config = JSON.parse(config_json.textContent)
+const fps_map = new Map(Object.entries(JSON.parse(fps_json.textContent)))
 
 search_form.addEventListener("submit", async e => {
   e.preventDefault()
@@ -53,29 +54,23 @@ submit_form.addEventListener("submit", async e => {
   const video = data.get("video")
   const frame = data.get("frame")
   const session = data.get("session")
-  const result = await (await fetch(`${config.api_url}/v1/submit?item=${video}&frame=${frame}&session=${session}`)).json()
+  const url = `${config.api_url}/v1/submit?item=${video}&frame=${frame}&session=${session}`
+  const result = await (await fetch(url)).json()
   submit_log.innerHTML = JSON.stringify(result, null, 2)
 })
 
-function timecode2frame(timecode) {
-  const min = Number(timecode.split(":")[0])
-  const sec = Number(timecode.split(":")[1])
-
-  const frame = (min*60 + sec)*25
-  return frame
-}
-
 frame_input.addEventListener("change", () => {
   const pattern = /^[0-5]?\d:[0-5]\d$/
-  if (!pattern.test(frame_input.value)) return
+  if (!pattern.test(frame_input.value) || !fps_map.has(video_input.value)) return
 
-  frame_input.value = timecode2frame(frame_input.value)
+  const splitted = frame_input.value.split(":")
+  const timestamp = Number(splitted[0]) * 60 + Number(splitted[1])
+  frame_input.value = Math.floor(timestamp * fps_map.get(video_input.value))
 })
 
 video_input.addEventListener("change", () => {
   const pattern = /^L\d\d_V\d\d\d:\d+$/
-  if (!pattern.test(video_input.value))
-  return
+  if (!pattern.test(video_input.value)) return
 
   const splitted = video_input.value.split(":")
   video_input.value = splitted[0]

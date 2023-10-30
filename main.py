@@ -34,6 +34,8 @@ timestamps = []
 frame_indices = []
 watch_urls = []
 
+fps = {}
+
 for video in videos:
     videos_features.append(from_numpy(np.load(f"{CLIP_FEATURES_PATH}/{video}.npy")))
 
@@ -43,9 +45,13 @@ for video in videos:
 
         next(map_keyframes)
         for rows in map_keyframes:
-            cells = [cell.rstrip() for cell in rows.split(',')]
+            cells = [cell.strip() for cell in rows.split(',')]
             pts_time.append(float(cells[1]))
             frame_idx.append(int(cells[3]))
+            if video in fps:
+                assert fps[video] == float(cells[2])
+            else:
+                fps[video] = float(cells[2])
 
         timestamps.append(pts_time)
         frame_indices.append(frame_idx)
@@ -94,7 +100,7 @@ def search_all_queries(queries, k):
 
 
 with open("web/template.html", encoding="utf-8") as html_file:
-    mapping = {}
+    mapping = dict(fps=json.dumps(fps))
     template = Template(html_file.read())
 
     with open("web/style.css", encoding="utf-8") as css_file:
@@ -103,7 +109,7 @@ with open("web/template.html", encoding="utf-8") as html_file:
         mapping["js"] = js_file.read()
 
     with open("config.json", encoding="utf-8") as config_file:
-        mapping["config"] = config_file.read()
+        mapping["config"] = json.dumps(json.loads(config_file.read()))
 
     html = template.substitute(mapping)
 

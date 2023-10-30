@@ -15,7 +15,7 @@ To learn more about the engine, you can read our paper: Not published.
 
 [Example
 dataset](https://docs.google.com/spreadsheets/d/1nnfmpsIB2Cm0jatlN10WjwwZvEIvQxctf8_8YKQfXi4/edit#gid=0)
-used in HCMC AI-Challenge 2023.
+used in the elimination round of HCMC AI-Challenge 2023.
 
 The retrieval engine needs a dataset in the following format
 
@@ -53,8 +53,8 @@ keyframes of the video encoded with OpenAI's CLIP ViT-B/32 Model.
 
 | n   | pts_time   | fps | frame_idx          |
 | --- | ---------- | --- | ------------------ |
-| 1   | timestamp1 | 25  | = timestamp1 * fps |
-| 1   | timestamp2 | 25  | = timestamp2 * fps |
+| 1   | timestamp1 | fps | = timestamp1 * fps |
+| 1   | timestamp2 | fps | = timestamp2 * fps |
 | ... | ...        | ... | ...                |
 
 `metadata/video.json` is a JSON object of the video's metadata. We only
