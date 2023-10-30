@@ -72,14 +72,14 @@ cd toms-retrieval
 ```
 
 Install [PyTorch](https://pytorch.org/get-started/locally/) for your platform
-and architecture, we used version 2.0.1.
+and hardware, we used version 2.0.1.
 
 Install other dependencies
 
 ```sh
 pip install ftfy regex tqdm
 pip install git+https://github.com/openai/CLIP.git
-pip install starlette uvicorn
+pip install starlette "uvicorn[standard]"
 ```
 
 ## Submission server configuration
