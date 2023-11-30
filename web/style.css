@@ -26,9 +26,14 @@
 
 .input {
   padding: .675em 1.5em;
-  border: none;
   border-radius: .25em;
   cursor: pointer;
+}
+
+@media (prefers-color-scheme: dark) {
+  .input {
+    border: none;
+  }
 }
 
 .bar {
@@ -125,4 +130,10 @@
   font-family: monospace;
   padding: 1rem;
   overflow-x: auto;
+}
+
+@page {
+  margin: 0;
+  padding: 0;
+  size: 800px 600px;
 }

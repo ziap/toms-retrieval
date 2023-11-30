@@ -68,33 +68,39 @@ max_len: int = max(feature.shape[0] for feature in videos_features)
 
 pre_mat = torch.triu(torch.full((max_len, max_len), 1).to(device))
 
+
+all_videos = []
+all_indices = []
+
+for video_idx, video_features in enumerate(videos_features):
+    all_videos.append(torch.full((video_features.shape[0],), video_idx).to(device))
+    all_indices.append(torch.arange(0, video_features.shape[0]).to(device))
+
+all_videos = torch.cat(all_videos)
+all_indices = torch.cat(all_indices)
+
 def search_all_queries(queries, k):
     with torch.no_grad():
         text_features = [model.encode_text(clip.tokenize(query).to(device)).view(1, -1) for query in queries]
 
-        all_videos = []
         all_values = []
-        all_indices = []
 
-        for video_idx, video_features in enumerate(videos_features):
+        for video_features in videos_features:
             text_features_view = [feature.expand(video_features.shape[0], -1) for feature in text_features]
             similarities = [F.cosine_similarity(view, video_features) * 0.5 + 0.5 for view in text_features_view]
             
             pre_slice = pre_mat[1:video_features.shape[0], 1:video_features.shape[0]]
 
-            pre = torch.full((video_features.shape[0],), 0).to(device)
+            pre = similarities[len(queries) - 1]
             for i in range(len(queries) - 1, 0, -1):
-                sim_view = similarities[i][1:].view(1, -1).expand(video_features.shape[0] - 1, -1)
                 pre_view = pre[1:].view(1, -1).expand(video_features.shape[0] - 1, -1)
-                pre = torch.cat([(pre_slice * (sim_view + pre_view)).max(0)[0], zero])
+                pre = torch.cat([(pre_slice * pre_view).max(0)[0], zero]) + similarities[i - 1]
 
-            all_videos.append(torch.full((video_features.shape[0],), video_idx))
-            all_values.append((similarities[0] + pre) * 100 / len(queries))
-            all_indices.append(torch.arange(0, video_features.shape[0]))
+            all_values.append(pre * 100 / len(queries))
 
         final_values, final_indices = torch.cat(all_values).topk(k, sorted=True)
-        final_videos = torch.cat(all_videos)[final_indices]
-        final_frames = torch.cat(all_indices)[final_indices]
+        final_videos = all_videos[final_indices]
+        final_frames = all_indices[final_indices]
 
     return final_videos, final_frames, final_values
 
