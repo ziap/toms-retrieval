@@ -66,8 +66,7 @@ print("DONE")
 zero = torch.zeros(1).to(device)
 max_len: int = max(feature.shape[0] for feature in videos_features)
 
-pre_mat = torch.triu(torch.full((max_len, max_len), 1).to(device))
-
+mask_full = torch.triu(torch.full((max_len, max_len), 1).to(device))
 
 all_videos = []
 all_indices = []
@@ -89,14 +88,15 @@ def search_all_queries(queries, k):
             text_features_view = [feature.expand(video_features.shape[0], -1) for feature in text_features]
             similarities = [F.cosine_similarity(view, video_features) * 0.5 + 0.5 for view in text_features_view]
             
-            pre_slice = pre_mat[1:video_features.shape[0], 1:video_features.shape[0]]
+            mask = mask_full[1:video_features.shape[0], 1:video_features.shape[0]]
 
-            pre = similarities[len(queries) - 1]
-            for i in range(len(queries) - 1, 0, -1):
-                pre_view = pre[1:].view(1, -1).expand(video_features.shape[0] - 1, -1)
-                pre = torch.cat([(pre_slice * pre_view).max(0)[0], zero]) + similarities[i - 1]
+            count = len(queries)
+            score = similarities[count - 1]
+            for i in range(count - 1, 0, -1):
+                score_mat = score[1:].view(1, -1).expand(video_features.shape[0] - 1, -1)
+                score = torch.cat([(mask * score_mat).max(0)[0], zero]) + similarities[i - 1]
 
-            all_values.append(pre * 100 / len(queries))
+            all_values.append(score * 100 / count)
 
         final_values, final_indices = torch.cat(all_values).topk(k, sorted=True)
         final_videos = all_videos[final_indices]
