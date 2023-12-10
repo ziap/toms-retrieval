@@ -66,7 +66,7 @@ print("DONE")
 zero = torch.zeros(1).to(device)
 max_len: int = max(feature.shape[0] for feature in videos_features)
 
-mask_full = torch.triu(torch.full((max_len, max_len), 1).to(device))
+mask_full = torch.triu(torch.ones((max_len, max_len)).to(device))
 
 all_videos = []
 all_indices = []
@@ -94,7 +94,7 @@ def search_all_queries(queries, k):
             score = similarities[count - 1]
             for i in range(count - 1, 0, -1):
                 score_mat = score[1:].view(1, -1).expand(video_features.shape[0] - 1, -1)
-                score = torch.cat([(mask * score_mat).max(0)[0], zero]) + similarities[i - 1]
+                score = torch.cat([(mask * score_mat).max(1)[0], zero]) + similarities[i - 1]
 
             all_values.append(score * 100 / count)
 

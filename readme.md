@@ -9,7 +9,7 @@ This engine is used at [HCMC AI-Challenge
 2023](https://aichallenge.hochiminhcity.gov.vn/) and got first place in the
 high school division.
 
-To learn more about the engine, you can read our paper: Not published.
+To learn more about the engine, you can read our paper: <https://dl.acm.org/doi/10.1145/3628797.3628984>.
 
 ## Dataset
 
