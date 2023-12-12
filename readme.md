@@ -110,3 +110,17 @@ Then access the engine at `http://localhost:8000`
 ## License
 
 This work is licensed under the [MIT License](LICENSE).
+
+If this project is useful for your research, please cite the following paper:
+
+```bibtex
+@inproceedings{10.1145/3628797.3628984,
+  author = {Bui, Huy-Giap and Trinh, Minh-Huy and Le, Canh-Toan and Vu, Quoc-Lam and Vo, Khac-Trieu},
+  title = {Zero-Shot Video Retrieval Using CLIP with Temporally Ordered Multi-Query Scoring},
+  year = {2023},
+  booktitle = {Proceedings of the 12th International Symposium on Information and Communication Technology},
+  pages = {938–944},
+  numpages = {7},
+  series = {SOICT '23}
+}
+```
